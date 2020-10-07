@@ -19,6 +19,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleContainerTools/skaffold/pkg/instrumentation"
 	"io"
 	"os"
 
@@ -29,6 +30,9 @@ import (
 )
 
 func Run(out, stderr io.Writer) error {
+	flush := instrumentation.InitTracer()
+	defer flush()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

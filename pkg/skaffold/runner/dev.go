@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/GoogleContainerTools/skaffold/pkg/instrumentation"
 	"io"
 	"time"
 
@@ -127,6 +128,10 @@ func (r *SkaffoldRunner) doDev(ctx context.Context, out io.Writer, logger *kuber
 // Dev watches for changes and runs the skaffold build and deploy
 // config until interrupted by the user.
 func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) error {
+	helper := instrumentation.GetHelper()
+	ctx, span := helper.Tracer.Start(ctx, "Dev")
+	defer span.End()
+
 	event.DevLoopInProgress(r.devIteration)
 	defer func() { r.devIteration++ }()
 
