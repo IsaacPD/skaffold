@@ -68,7 +68,6 @@ func (w withTimings) Build(ctx context.Context, out io.Writer, tags tag.ImageTag
 	meter := global.Meter("skaffold/app")
 	latencyRecorder := metric.Must(meter).NewFloat64ValueRecorder("build/latency")
 	latencyRecorder.Record(ctx, buildDuration.Seconds())
-	latencyRecorder.
 	logrus.Infoln("Build complete in", buildDuration)
 	return bRes, nil
 }
