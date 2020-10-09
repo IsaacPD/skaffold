@@ -21,6 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/GoogleContainerTools/skaffold/pkg/instrumentation"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/metric"
+	"go.opentelemetry.io/otel/label"
 	"io"
 	"time"
 
@@ -128,9 +131,13 @@ func (r *SkaffoldRunner) doDev(ctx context.Context, out io.Writer, logger *kuber
 // Dev watches for changes and runs the skaffold build and deploy
 // config until interrupted by the user.
 func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) error {
-	helper := instrumentation.GetHelper()
-	ctx, span := helper.Tracer.Start(ctx, "Dev")
+	tracer := instrumentation.GetHelper().Tracer
+	meter := global.Meter("skaffold/app")
+	ctx, span := tracer.Start(ctx, "start dev")
 	defer span.End()
+
+	syncCounter := metric.Must(meter).NewInt64Counter("sync/count")
+	syncCounter.Bind(label.String("TestKey", "TestValue Is Isaac OwO"))
 
 	event.DevLoopInProgress(r.devIteration)
 	defer func() { r.devIteration++ }()
@@ -248,6 +255,9 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 
 	event.DevLoopComplete(0)
 	return r.listener.WatchForChanges(ctx, out, func() error {
+		syncCounter.Add(ctx, 1)
+		ctx, s := tracer.Start(ctx, "Sync Change")
+		defer s.End()
 		return r.doDev(ctx, out, logger, forwarderManager)
 	})
 }

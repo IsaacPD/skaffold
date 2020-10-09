@@ -31,7 +31,9 @@ import (
 
 func Run(out, stderr io.Writer) error {
 	flush := instrumentation.InitTracer()
+	pusher := instrumentation.InitMeter()
 	defer flush()
+	defer pusher.Stop()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

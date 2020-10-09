@@ -58,6 +58,8 @@ const (
 
 	DefaultSkaffoldDir = ".skaffold"
 	DefaultCacheFile   = "cache"
+	DefaultSpanFile	   = "span"
+	DefaultMetricFile  = "metric"
 
 	DefaultRPCPort     = 50051
 	DefaultRPCHTTPPort = 50052

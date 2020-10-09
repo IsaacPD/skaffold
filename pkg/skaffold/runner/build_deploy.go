@@ -19,6 +19,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleContainerTools/skaffold/pkg/instrumentation"
 	"io"
 	"os"
 	"time"
@@ -34,6 +35,11 @@ import (
 
 // BuildAndTest builds and tests a list of artifacts.
 func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) ([]build.Artifact, error) {
+	th := instrumentation.GetHelper()
+	ctx, span := th.Tracer.Start(ctx, "start build")
+	defer th.Finalize(span)
+	span.SetAttribute("Builder", r.runCtx.Pipeline().Build.Artifacts[0].ArtifactType)
+
 	// Use tags directly from the Kubernetes manifests.
 	if r.runCtx.DigestSource() == noneDigestSource {
 		return []build.Artifact{}, nil
