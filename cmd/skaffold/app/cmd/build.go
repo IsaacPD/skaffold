@@ -89,6 +89,8 @@ func doBuild(ctx context.Context, out io.Writer) error {
 			}
 		}
 
+		r.Finalize(ctx, buildOut)
+
 		return err
 	})
 }

@@ -19,6 +19,7 @@ package runner
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/cache"
@@ -48,6 +49,7 @@ type Runner interface {
 	DeployAndLog(context.Context, io.Writer, []build.Artifact) error
 	GeneratePipeline(context.Context, io.Writer, *latest.SkaffoldConfig, []string, string) error
 	Render(context.Context, io.Writer, []build.Artifact, bool, string) error
+	Finalize(context.Context, io.Writer)
 	Cleanup(context.Context, io.Writer) error
 	Prune(context.Context, io.Writer) error
 	HasDeployed() bool
@@ -79,6 +81,7 @@ type SkaffoldRunner struct {
 	hasDeployed    bool
 	intents        *intents
 	devIteration   int
+	start          time.Time
 }
 
 // for testing

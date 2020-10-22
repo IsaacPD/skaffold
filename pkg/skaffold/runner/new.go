@@ -19,6 +19,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -127,6 +128,7 @@ func NewForConfig(runCtx *runcontext.RunContext) (*SkaffoldRunner, error) {
 		runCtx:         runCtx,
 		intents:        intents,
 		imagesAreLocal: imagesAreLocal,
+		start:			time.Now(),
 	}, nil
 }
 

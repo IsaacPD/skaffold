@@ -77,6 +77,7 @@ func doRender(ctx context.Context, out io.Writer) error {
 		if err := r.Render(ctx, out, bRes, offline, renderOutputPath); err != nil {
 			return fmt.Errorf("rendering manifests: %w", err)
 		}
+		r.Finalize(ctx, out)
 		return nil
 	})
 }

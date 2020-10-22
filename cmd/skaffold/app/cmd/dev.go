@@ -55,6 +55,11 @@ func runDev(ctx context.Context, out io.Writer) error {
 		}()
 	}
 
+	finalize := func() {}
+	defer func() {
+		finalize()
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -77,6 +82,10 @@ func runDev(ctx context.Context, out io.Writer) error {
 							logrus.Warnln("builder cleanup:", err)
 						}
 					}
+				}
+
+				finalize = func() {
+					r.Finalize(ctx, out)
 				}
 
 				return err

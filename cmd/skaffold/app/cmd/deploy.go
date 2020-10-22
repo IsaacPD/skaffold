@@ -72,8 +72,9 @@ func doDeploy(ctx context.Context, out io.Writer) error {
 			}
 			deployed[i].Tag = tag
 		}
-
-		return r.DeployAndLog(ctx, out, deployed)
+		e := r.DeployAndLog(ctx, out, deployed)
+		r.Finalize(ctx, out)
+		return e
 	})
 }
 

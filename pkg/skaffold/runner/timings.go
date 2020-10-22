@@ -18,8 +18,6 @@ package runner
 
 import (
 	"context"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/metric"
 	"io"
 	"time"
 
@@ -64,10 +62,6 @@ func (w withTimings) Build(ctx context.Context, out io.Writer, tags tag.ImageTag
 	}
 
 	buildDuration := time.Since(start)
-
-	meter := global.Meter("skaffold/app")
-	latencyRecorder := metric.Must(meter).NewFloat64ValueRecorder("build/latency")
-	latencyRecorder.Record(ctx, buildDuration.Seconds())
 	logrus.Infoln("Build complete in", buildDuration)
 	return bRes, nil
 }

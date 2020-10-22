@@ -52,6 +52,7 @@ func doRun(ctx context.Context, out io.Writer) error {
 			tips.PrintForRun(out, opts)
 		}
 
+		r.Finalize(ctx, out)
 		return err
 	})
 }
