@@ -1,14 +1,20 @@
 package instrumentation
 
 import (
+	"fmt"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/mitchellh/go-homedir"
+	"go.opentelemetry.io/otel/api/metric"
 	"go.opentelemetry.io/otel/sdk/metric/controller/push"
-	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/metric/processor/basic"
+	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"path/filepath"
+	"time"
 
-	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
+	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"go.opentelemetry.io/otel/exporters/otlp"
+
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
@@ -26,7 +32,22 @@ type TraceHelper struct {
 
 var helper *TraceHelper = nil
 
-func InitBasicMetrics() *push.Controller {
+func InitCollectorExporterMetrics() *push.Controller {
+	exporter, err := otlp.NewExporter(
+		otlp.WithInsecure(),
+		otlp.WithAddress("localhost:55680"))
+	if err != nil {
+		logrus.Fatalf("failed to create exporter: %v", err)
+	}
+
+	pusher := push.New(basic.New(simple.NewWithInexpensiveDistribution(), exporter), exporter)
+
+	global.SetMeterProvider(pusher.MeterProvider())
+	pusher.Start()
+	return pusher
+}
+
+func InitFileExporterMetrics() *push.Controller {
 	home, err := homedir.Dir()
 	path := filepath.Join(home, constants.DefaultSkaffoldDir, constants.DefaultMetricFile)
 	file, err := os.OpenFile(path, os.O_CREATE | os.O_RDWR, 0666)
@@ -46,8 +67,7 @@ func InitBasicMetrics() *push.Controller {
 	return pusher
 }
 
-func InitBasicTracer() func() {
-	var err error
+func InitFileExporterTracer() func() {
 	home, err := homedir.Dir()
 	path := filepath.Join(home, constants.DefaultSkaffoldDir, constants.DefaultSpanFile)
 	file, err := os.OpenFile(path, os.O_CREATE | os.O_RDWR, 0666)
@@ -73,7 +93,7 @@ func InitBasicTracer() func() {
 	return bsp.Shutdown
 }
 
-func InitTracer() func() {
+func InitCloudMonitoringExporterTracer() func() {
 	projectID := os.Getenv("PROJECT_ID")
 
 	_, flush, err := texporter.InstallNewPipeline(
@@ -88,14 +108,19 @@ func InitTracer() func() {
 	return flush
 }
 
-func InitMeter() *push.Controller {
+func InitCloudMonitoringExporterMetrics() *push.Controller {
 	projectID := os.Getenv("PROJECT_ID")
 
+	formatter := func(desc *metric.Descriptor) string {
+		return fmt.Sprintf("custom.googleapis.com/skaffold/%s", desc.Name())
+	}
+
 	pusher, err := mexporter.InstallNewPipeline(
-		[]mexporter.Option{mexporter.WithProjectID(projectID)},
-		push.WithResource(resource.New(
-			label.String("installation_id", "isaacfakeinstallid"),
-		)),
+		[]mexporter.Option{
+			mexporter.WithProjectID(projectID),
+			mexporter.WithMetricDescriptorTypeFormatter(formatter),
+			mexporter.WithInterval(time.Minute * 3),
+		},
 	)
 	if err != nil {
 		logrus.Fatalf("Failed to establish pipeline")

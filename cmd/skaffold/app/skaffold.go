@@ -30,9 +30,7 @@ import (
 )
 
 func Run(out, stderr io.Writer) error {
-	flush := instrumentation.InitTracer()
-	pusher := instrumentation.InitMeter()
-	defer flush()
+	pusher := instrumentation.InitCloudMonitoringExporterMetrics()
 	defer pusher.Stop()
 
 	ctx, cancel := context.WithCancel(context.Background())

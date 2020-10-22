@@ -176,10 +176,6 @@ func NewExportPipeline(opts []Option, popts ...push.Option) (*push.Controller, e
 
 // ExportMetrics exports OpenTelemetry Metrics to Google Cloud Monitoring.
 func (me *metricExporter) ExportMetrics(ctx context.Context, cps export.CheckpointSet) error {
-	if err := me.exportMetricDescriptor(ctx, cps); err != nil {
-		return err
-	}
-
 	if err := me.exportTimeSeries(ctx, cps); err != nil {
 		return err
 	}
