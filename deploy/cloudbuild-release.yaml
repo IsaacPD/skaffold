@@ -10,6 +10,36 @@ steps:
     - 'deploy/skaffold/Dockerfile'
     - '.'
 
+  - name: gcr.io/cloud-builders/gcloud-slim
+    args:
+    - 'gcloud'
+    - 'iam'
+    - 'service-accounts'
+    - 'create'
+    - 'metrics-$TAG_NAME'
+    - '--description=”metrics upload $TAG_NAME"'
+    - '--display-name="metrics-$TAG_NAME"'
+
+  - name: gcr.io/cloud-builders/gcloud-slim
+    args:
+    - 'gcloud'
+    - 'projects'
+    - 'add-iam-policy-binding'
+    - 'k8s-skaffold'
+    - '--member="serviceAccount:metrics-($TAG_NAME)@k8s-skaffold.iam.gserviceaccount.com"'
+    - '--role="roles/monitoring.metricWriter"'
+
+  - name: gcr.io/cloud-builders/gcloud-slim
+    args:
+    - 'gcloud'
+    - 'iam'
+    - 'service-accounts'
+    - 'keys'
+    - 'create'
+    - './secrets/key.json'
+    - '--iam-account'
+    - 'metrics-($TAG_NAME)@k8s-skaffold.iam.gserviceaccount.com'
+
 # Do the go build & push the results to GCS
   - name: 'gcr.io/$PROJECT_ID/skaffold-builder:latest'
     args:
