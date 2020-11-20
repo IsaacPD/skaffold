@@ -53,21 +53,50 @@ import (
 )
 
 type skaffoldMeter struct {
-	ExitCode       int
+	// ExitCode stores what exit code skaffold throws
+	ExitCode int
+
+	// BuildArtifacts contains how many build artifacts in configuration
 	BuildArtifacts int
-	Command        string
-	Version        string
-	OS             string
-	Arch           string
-	PlatformType   string
-	Deployers      []string
-	EnumFlags      map[string]string
-	Builders       map[string]int
-	SyncType       map[string]bool
-	DevIterations  []devIteration
-	StartTime      time.Time
-	Duration       time.Duration
-	ErrorCode      proto.StatusCode
+
+	// Command is the command used for the iteration
+	Command string
+
+	// Version of skaffold being used i.e. v1.17
+	Version string
+
+	// OS that skaffold is running on (darwin, win, linux, etc.)
+	OS string
+
+	// Arch that skaffold is running on (amd64, arm64, etc.)
+	Arch string
+
+	// PlatformType being deployed to (local, cluster, googleCloudBuild)
+	PlatformType string
+
+	// Deployers used for deployment
+	Deployers []string
+
+	// EnumFlags flags with a predefined set of values used in invocation
+	EnumFlags map[string]string
+
+	// Builders used to build artifacts by count of each
+	Builders map[string]int
+
+	// SyncType infer, auto, manual
+	SyncType map[string]bool
+
+	// DevIterations counts the triggers for each dev iteration (sync, build, or deploy)
+	DevIterations []devIteration
+
+	// StartTime the start time of the skaffold program, used to track how long skaffold took to finish executing
+	StartTime time.Time
+
+	// Duration of skaffold instance
+	Duration time.Duration
+
+	// ErrorCode returned when there's an issue with skaffold
+	ErrorCode proto.StatusCode
 }
 
 type devIteration struct {
