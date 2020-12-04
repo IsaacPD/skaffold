@@ -41,7 +41,7 @@ Or, check out our [Github Releases](https://github.com/GoogleContainerTools/skaf
   * **client-side only** - Skaffold has no cluster-side component, so there is no overhead or maintenance burden
   * **minimal pipeline** - Skaffold provides an opinionated, minimal pipeline to keep things simple
 
-### Check out our [examples page](./examples) for more complex workflows!
+### Check out our [examples page](https://github.com/GoogleContainerTools/skaffold/blob/master/examples) for more complex workflows!
 
 ## Contributing to Skaffold
 
@@ -68,7 +68,7 @@ Your feedback is very valuable to us! We have an anonymous user feedback survey 
 
 Survey Link - https://forms.gle/BMTbGQXLWSdn7vEs6
 
-## Support 
+## Support
 
 Skaffold is generally available and considered production ready.
 Detailed feature maturity information and how we deprecate features are described in our [Deprecation Policy](https://skaffold.dev/docs/references/deprecation).
