@@ -350,3 +350,7 @@ func errorMetrics(ctx context.Context, meter skaffoldMeter, m metric.Meter, rand
 		unknownCounter.Record(ctx, 1, commandLabel, randLabel)
 	}
 }
+
+func createFlagLabel(name, value string) label.KeyValue {
+	return label.String("flag_" + name, value)
+}
