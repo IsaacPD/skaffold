@@ -59,7 +59,7 @@ type skaffoldMeter struct {
 	Version        string
 	OS             string
 	Arch           string
-	PlatformType   string
+	PlatformType   []string
 	Deployers      []string
 	EnumFlags      map[string]string
 	Builders       map[string]int
@@ -97,7 +97,7 @@ var (
 )
 
 func init() {
-	meteredCommands.Insert("build", "delete", "deploy", "dev", "debug", "filter", "generate_pipeline", "render", "run", "test")
+	meteredCommands.Insert("build", "delete", "deploy", "dev", "debug", "filter", "generate-pipeline", "render", "run", "test")
 	doesBuild.Insert("build", "render", "dev", "debug", "run")
 	doesDeploy.Insert("deploy", "dev", "debug", "run")
 	go func() {
@@ -112,8 +112,8 @@ func init() {
 }
 
 func InitMeterFromConfig(configs []*latest.SkaffoldConfig) {
-	meter.PlatformType = yamltags.GetYamlTag(configs[0].Build.BuildType) // TODO: support multiple build types in events.
 	for _, config := range configs {
+		meter.PlatformType = append(meter.PlatformType, yamltags.GetYamlTag(config.Build.BuildType))
 		for _, artifact := range config.Pipeline.Build.Artifacts {
 			meter.Builders[yamltags.GetYamlTag(artifact.ArtifactType)]++
 			if artifact.Sync != nil {
@@ -187,6 +187,7 @@ func exportMetrics(ctx context.Context, filename string, meter skaffoldMeter) er
 	meters = append(meters, meter)
 	if !isOnline {
 		b, _ = json.Marshal(meters)
+		logrus.Debugf("internet connection not established fast enough,exporting metrics to local file")
 		return ioutil.WriteFile(filename, b, 0666)
 	}
 
@@ -259,6 +260,10 @@ func createMetrics(ctx context.Context, meter skaffoldMeter) {
 		label.String("command", meter.Command),
 		label.String("error", strconv.Itoa(int(meter.ErrorCode))),
 		randLabel,
+	}
+
+	if name, present := os.LookupEnv("SKAFFOLD_USERNAME"); present {
+		labels = append(labels, label.String("username", name))
 	}
 
 	runCounter := metric.Must(m).NewInt64ValueRecorder("launches", metric.WithDescription("Skaffold Invocations"))
@@ -334,9 +339,8 @@ func builderMetrics(ctx context.Context, meter skaffoldMeter, m metric.Meter, ra
 
 func errorMetrics(ctx context.Context, meter skaffoldMeter, m metric.Meter, randLabel label.KeyValue) {
 	errCounter := metric.Must(m).NewInt64ValueRecorder("errors", metric.WithDescription("Skaffold errors"))
-	errCounter.Record(ctx, 1, label.String("error", strconv.Itoa(int(meter.ErrorCode))), randLabel)
-
 	commandLabel := label.String("command", meter.Command)
+	errCounter.Record(ctx, 1, label.String("error", strconv.Itoa(int(meter.ErrorCode))), commandLabel, randLabel)
 
 	switch meter.ErrorCode {
 	case proto.StatusCode_UNKNOWN_ERROR:
