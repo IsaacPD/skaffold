@@ -117,12 +117,12 @@ var (
 		ExitCode:      0,
 		ErrorCode:     proto.StatusCode_OK,
 	}
-	shouldExportMetrics = os.Getenv("SKAFFOLD_EXPORT_METRICS") == "true"
 	meteredCommands     = util.NewStringSet()
 	doesBuild           = util.NewStringSet()
 	doesDeploy          = util.NewStringSet()
 	initExporter        = initCloudMonitoringExporterMetrics
 	isOnline            bool
+	shouldExportMetrics bool
 )
 
 func init() {
@@ -130,12 +130,10 @@ func init() {
 	doesBuild.Insert("build", "render", "dev", "debug", "run")
 	doesDeploy.Insert("deploy", "dev", "debug", "run")
 	go func() {
-		if shouldExportMetrics {
-			r, err := http.Get("http://clients3.google.com/generate_204")
-			if err == nil {
-				r.Body.Close()
-				isOnline = true
-			}
+		r, err := http.Get("http://clients3.google.com/generate_204")
+		if err == nil {
+			r.Body.Close()
+			isOnline = true
 		}
 	}()
 }
